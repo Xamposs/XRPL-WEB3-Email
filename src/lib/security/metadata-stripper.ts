@@ -287,12 +287,12 @@ export class MetadataStripper {
       // Web beacons
       .replace(/<img[^>]*src=["'][^"']*track[^"']*["'][^>]*>/gi, '')
       .replace(/<img[^>]*src=["'][^"']*beacon[^"']*["'][^>]*>/gi, '')
-      // Analytics scripts
-      .replace(/<script[^>]*google-analytics[^>]*>.*?<\/script>/gis, '')
-      .replace(/<script[^>]*gtag[^>]*>.*?<\/script>/gis, '')
+      // Analytics scripts - αντικατάσταση του /gis με /gi και [\s\S]*?
+      .replace(/<script[^>]*google-analytics[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<script[^>]*gtag[^>]*>[\s\S]*?<\/script>/gi, '')
       // Social media tracking
-      .replace(/<script[^>]*facebook[^>]*>.*?<\/script>/gis, '')
-      .replace(/<script[^>]*twitter[^>]*>.*?<\/script>/gis, '')
+      .replace(/<script[^>]*facebook[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<script[^>]*twitter[^>]*>[\s\S]*?<\/script>/gi, '')
   }
 
   // Προσθήκη τυχαίας καθυστέρησης
