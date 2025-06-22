@@ -1,22 +1,49 @@
 import { WalletProvider, WalletInfo } from './types'
 
+// Type definitions για το Crossmark SDK
+interface CrossmarkSDK {
+  methods: {
+    signInAndWait: () => Promise<{
+      response: {
+        address: string
+        publicKey?: string
+        network?: string
+      }
+    }>
+    signAndWait: (payload: any) => Promise<{
+      response: {
+        signature?: string
+        data?: {
+          signature?: string
+        }
+      }
+    }>
+    signAndSubmitAndWait: (transaction: any) => Promise<{
+      response: {
+        data?: {
+          resp?: {
+            result?: {
+              hash?: string
+            }
+            hash?: string
+          }
+        }
+      }
+    }>
+  }
+}
+
+// Import του SDK με proper typing
+let sdk: CrossmarkSDK
+try {
+  sdk = require('@crossmarkio/sdk')
+} catch (error) {
+  console.warn('Crossmark SDK not available:', error)
+}
+
 declare global {
   interface Window {
-    crossmark?: {
-      isInstalled: () => boolean
-      connect: () => Promise<{
-        address: string
-        publicKey: string
-        network: string
-      }>
-      signMessage: (message: string) => Promise<{ signature: string }>
-      sendPayment: (payment: {
-        TransactionType: string
-        Destination: string
-        Amount: string
-        Fee?: string
-      }) => Promise<{ hash: string }>
-    }
+    crossmark?: any
   }
 }
 
@@ -24,12 +51,17 @@ export class CrossmarkProvider implements WalletProvider {
   name = 'Crossmark'
 
   isInstalled(): boolean {
-    // Always return true and let the connect method handle the actual detection
-    return true
+    try {
+      return typeof window !== 'undefined' && 
+             typeof window.crossmark !== 'undefined' &&
+             window.crossmark !== null
+    } catch (error) {
+      console.log('Crossmark detection error:', error)
+      return false
+    }
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
-    // If custom address is provided, use it (for demo/testing)
     if (customAddress) {
       return {
         name: this.name,
@@ -40,18 +72,25 @@ export class CrossmarkProvider implements WalletProvider {
     }
 
     try {
-      // Check if Crossmark is actually available
-      if (typeof window === 'undefined' || !window.crossmark) {
+      if (!this.isInstalled()) {
         throw new Error('Crossmark extension not found. Please install Crossmark from crossmark.io and refresh the page.')
       }
 
-      const result = await window.crossmark.connect()
+      if (!sdk) {
+        throw new Error('Crossmark SDK not available')
+      }
+
+      const signInResult = await sdk.methods.signInAndWait()
+      
+      if (!signInResult.response || !signInResult.response.address) {
+        throw new Error('Failed to get wallet information from Crossmark')
+      }
 
       return {
         name: this.name,
-        address: result.address,
-        publicKey: result.publicKey,
-        networkId: result.network
+        address: signInResult.response.address,
+        publicKey: signInResult.response.publicKey || 'crossmark-public-key',
+        networkId: signInResult.response.network || 'mainnet'
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
@@ -62,8 +101,7 @@ export class CrossmarkProvider implements WalletProvider {
   }
 
   async disconnect(): Promise<void> {
-    // Crossmark doesn't have a disconnect method
-    // The connection state is managed by the extension
+    // Crossmark SDK doesn't have a disconnect method
   }
 
   async signMessage(message: string): Promise<string> {
@@ -71,9 +109,16 @@ export class CrossmarkProvider implements WalletProvider {
       throw new Error('Crossmark is not installed')
     }
 
+    if (!sdk) {
+      throw new Error('Crossmark SDK not available')
+    }
+
     try {
-      const result = await window.crossmark!.signMessage(message)
-      return result.signature
+      const result = await sdk.methods.signAndWait({
+        message: message
+      })
+      
+      return result.response.signature || result.response.data?.signature || ''
     } catch (error) {
       throw new Error(`Failed to sign message: ${error}`)
     }
@@ -84,14 +129,26 @@ export class CrossmarkProvider implements WalletProvider {
       throw new Error('Crossmark is not installed')
     }
 
+    if (!sdk) {
+      throw new Error('Crossmark SDK not available')
+    }
+
     try {
-      const result = await window.crossmark!.sendPayment({
+      const signInResult = await sdk.methods.signInAndWait()
+      
+      if (!signInResult.response?.address) {
+        throw new Error('Could not get user address')
+      }
+
+      const result = await sdk.methods.signAndSubmitAndWait({
         TransactionType: 'Payment',
+        Account: signInResult.response.address,
         Destination: destination,
         Amount: amount,
-        Fee: '12' // Standard fee in drops
+        Fee: '12'
       })
-      return result.hash
+      
+      return result.response.data?.resp?.result?.hash || result.response.data?.resp?.hash || ''
     } catch (error) {
       throw new Error(`Failed to send payment: ${error}`)
     }
