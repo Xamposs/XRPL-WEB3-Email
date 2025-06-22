@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { Wallet, LogOut, Copy, Check } from 'lucide-react'
 import { XamanQRModal } from './xaman-qr-modal'
@@ -242,22 +244,17 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
 
         {showWallets && (
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
             onClick={() => setShowWallets(false)}
           >
-            <div className="absolute top-16 right-4">
-              <div 
-                className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
+            <div 
+              className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
                   <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setShowWallets(false)
-                    }}
+                    onClick={() => setShowWallets(false)}
                     className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
                   >
                     ✕
@@ -265,7 +262,6 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
                 </div>
 
                 <div className="space-y-3">
-                  {/* Εδώ συνεχίζει ο υπόλοιπος κώδικας του modal */}
                   {walletOptions.map((walletOption) => (
                     <div key={walletOption.id} className="relative">
                       <div
@@ -305,7 +301,6 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
                 </div>
               </div>
             </div>
-          </div>
         )}
       </div>
     )
@@ -349,11 +344,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
                 <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setShowWallets(false)
-                  }}
+                  onClick={() => setShowWallets(false)}
                   className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
                 >
                   ✕
