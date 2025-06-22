@@ -25,13 +25,39 @@ export class CrossmarkProvider implements WalletProvider {
 
   isInstalled(): boolean {
     try {
-      return typeof window !== 'undefined' && 
-             typeof window.crossmark !== 'undefined' && 
-             window.crossmark !== null &&
-             typeof window.crossmark.isInstalled === 'function' &&
-             window.crossmark.isInstalled()
+      console.log('🔍 Checking Crossmark installation...')
+      console.log('window:', typeof window)
+      console.log('window.crossmark:', window.crossmark)
+      console.log('typeof window.crossmark:', typeof window.crossmark)
+      
+      if (typeof window === 'undefined') {
+        console.log('❌ Window is undefined')
+        return false
+      }
+      
+      if (typeof window.crossmark === 'undefined') {
+        console.log('❌ window.crossmark is undefined')
+        return false
+      }
+      
+      if (window.crossmark === null) {
+        console.log('❌ window.crossmark is null')
+        return false
+      }
+      
+      console.log('window.crossmark.isInstalled:', window.crossmark.isInstalled)
+      console.log('typeof window.crossmark.isInstalled:', typeof window.crossmark.isInstalled)
+      
+      if (typeof window.crossmark.isInstalled !== 'function') {
+        console.log('❌ window.crossmark.isInstalled is not a function')
+        return false
+      }
+      
+      const result = window.crossmark.isInstalled()
+      console.log('✅ Crossmark.isInstalled() result:', result)
+      return result
     } catch (error) {
-      console.error('Error checking Crossmark installation:', error)
+      console.error('❌ Error checking Crossmark installation:', error)
       return false
     }
   }
