@@ -64,20 +64,32 @@ export class CrossmarkProvider implements WalletProvider {
         throw new Error('Crossmark SDK methods not available. Please check SDK installation.')
       }
 
-      const signInResult = await sdk.methods.signInAndWait()
-      
-      if (!signInResult.response || !signInResult.response.address) {
-        throw new Error('Failed to get wallet information from Crossmark')
-      }
+      // Έλεγχος αν υπάρχουν ενεργοί χρήστες
+      try {
+        const signInResult = await sdk.methods.signInAndWait()
+        
+        if (!signInResult || !signInResult.response) {
+          throw new Error('No users available. Please open Crossmark extension and create an account first.')
+        }
 
-      return {
-        name: this.name,
-        address: signInResult.response.address,
-        publicKey: signInResult.response.publicKey || 'crossmark-public-key',
-        networkId: signInResult.response.network || 'mainnet'
+        if (!signInResult.response.address) {
+          throw new Error('Failed to get wallet information from Crossmark. Please ensure you have an active account.')
+        }
+
+        return {
+          name: this.name,
+          address: signInResult.response.address,
+          publicKey: signInResult.response.publicKey || 'crossmark-public-key',
+          networkId: signInResult.response.network || 'mainnet'
+        }
+      } catch (sdkError: any) {
+        if (sdkError.message && sdkError.message.includes('No users available')) {
+          throw new Error('No users available. Please open Crossmark extension and create an account first.')
+        }
+        throw new Error(`Failed to get wallet information from Crossmark: ${sdkError.message || sdkError}`)
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
+      if (error instanceof Error) {
         throw error
       }
       throw new Error(`Failed to connect to Crossmark: ${error}`)
