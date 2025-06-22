@@ -49,21 +49,8 @@ export class XamanSDKProvider implements WalletProvider {
     try {
       console.log('🔗 Starting Xaman connection...')
 
-      // For demo purposes, we'll simulate the connection
-      // In production, you would create a real SignIn payload
-      if (this.apiKey === 'demo-api-key') {
-        console.log('🔗 Using demo mode for Xaman connection')
-        
-        // Return a demo wallet info
-        return {
-          name: this.name,
-          address: customAddress || 'rXamanDemo1234567890123456789012',
-          publicKey: 'xaman-demo-public-key',
-          networkId: 'testnet'
-        }
-      }
-
-      // Create SignIn payload for production
+      // ΑΦΑΙΡΕΣΕ το demo mode check - πάντα να δημιουργεί πραγματικό payload
+      // Create SignIn payload
       const payload = await this.createSignInPayload()
       
       console.log('🔗 Xaman payload created:', payload.uuid)
