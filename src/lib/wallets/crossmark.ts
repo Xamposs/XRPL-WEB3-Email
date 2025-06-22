@@ -64,28 +64,59 @@ export class CrossmarkProvider implements WalletProvider {
         throw new Error('Crossmark SDK methods not available. Please check SDK installation.')
       }
 
-      // Έλεγχος αν υπάρχουν ενεργοί χρήστες
+      console.log('Attempting to connect to Crossmark...')
+      
       try {
         const signInResult = await sdk.methods.signInAndWait()
         
-        if (!signInResult || !signInResult.response) {
-          throw new Error('No users available. Please open Crossmark extension and create an account first.')
+        console.log('Crossmark signInResult:', signInResult)
+        
+        // Έλεγχος για διαφορετικές δομές απόκρισης
+        let address = null
+        let publicKey = null
+        let network = null
+        
+        if (signInResult && signInResult.response) {
+          // Κανονική δομή απόκρισης
+          address = signInResult.response.address
+          publicKey = signInResult.response.publicKey
+          network = signInResult.response.network
+        } else if (signInResult && signInResult.data) {
+          // Εναλλακτική δομή απόκρισης
+          address = signInResult.data.address
+          publicKey = signInResult.data.publicKey
+          network = signInResult.data.network
+        } else if (signInResult && signInResult.address) {
+          // Απευθείας στο root object
+          address = signInResult.address
+          publicKey = signInResult.publicKey
+          network = signInResult.network
+        }
+        
+        if (!address) {
+          console.error('No address found in signInResult:', signInResult)
+          throw new Error('Failed to get wallet address from Crossmark. Please ensure you have selected an active account in Crossmark extension.')
         }
 
-        if (!signInResult.response.address) {
-          throw new Error('Failed to get wallet information from Crossmark. Please ensure you have an active account.')
-        }
-
+        console.log('Successfully connected to Crossmark with address:', address)
+        
         return {
           name: this.name,
-          address: signInResult.response.address,
-          publicKey: signInResult.response.publicKey || 'crossmark-public-key',
-          networkId: signInResult.response.network || 'mainnet'
+          address: address,
+          publicKey: publicKey || 'crossmark-public-key',
+          networkId: network || 'mainnet'
         }
       } catch (sdkError: any) {
+        console.error('Crossmark SDK Error:', sdkError)
+        
         if (sdkError.message && sdkError.message.includes('No users available')) {
           throw new Error('No users available. Please open Crossmark extension and create an account first.')
         }
+        
+        if (sdkError.message && sdkError.message.includes('User rejected')) {
+          throw new Error('Connection rejected by user. Please try again and approve the connection in Crossmark.')
+        }
+        
         throw new Error(`Failed to get wallet information from Crossmark: ${sdkError.message || sdkError}`)
       }
     } catch (error) {
