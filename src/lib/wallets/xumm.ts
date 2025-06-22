@@ -69,21 +69,14 @@ export class XamanProvider implements WalletProvider {
         }
       }
 
-      // Use Xaman SDK for connection (like your Discord bot)
-      console.log('🔗 Using Xaman SDK for connection')
-      const xamanSDK = new XamanSDKProvider()
-      const result = await xamanSDK.connect(customAddress)
-
-      return {
-        name: this.name,
-        address: result.address,
-        publicKey: result.publicKey,
-        networkId: result.networkId
-      }
+      // If no browser bridge available, trigger QR modal
+      console.log('🔗 No browser bridge found, triggering QR modal')
+      throw new Error('SHOW_QR_MODAL')
 
     } catch (error) {
       console.error('❌ Xaman connection failed:', error)
-      throw new Error(`Failed to connect to Xaman: ${error}`)
+      // Always trigger QR modal for mobile wallet connection
+      throw new Error('SHOW_QR_MODAL')
     }
   }
 

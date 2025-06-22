@@ -110,9 +110,17 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
           setShowWallets(false)
           console.log('✅ Xaman connection successful')
         } catch (error) {
-          console.error('❌ Xaman connection failed:', error)
-          // Show QR modal as fallback
-          setShowXamanQR(true)
+          console.log('🔗 Showing Xaman QR modal for mobile connection')
+          // Check if this is the expected QR modal trigger
+          if (error instanceof Error && error.message === 'SHOW_QR_MODAL') {
+            setShowXamanQR(true)
+            setShowWallets(false)
+          } else {
+            console.error('❌ Xaman connection failed:', error)
+            // Show QR modal as fallback for any connection error
+            setShowXamanQR(true)
+            setShowWallets(false)
+          }
         }
         return
       }

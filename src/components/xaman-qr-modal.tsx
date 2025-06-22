@@ -56,6 +56,19 @@ export function XamanQRModal({ isOpen, onClose, onConnect }: XamanQRModalProps) 
     )
   }
 
+  const handleSimulateConnection = () => {
+    console.log('🎮 Simulating Xaman connection for demo')
+    setIsConnecting(true)
+    
+    // Simulate connection delay
+    setTimeout(() => {
+      const demoAddress = 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH'
+      onConnect(demoAddress)
+      setIsConnecting(false)
+      onClose()
+    }, 2000)
+  }
+
   if (!isOpen) return null
 
   return (
