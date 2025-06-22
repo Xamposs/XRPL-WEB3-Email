@@ -242,68 +242,67 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
 
         {showWallets && (
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]"
             onClick={() => setShowWallets(false)}
           >
-            <div 
-              className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setShowWallets(false)
-                  }}
-                  className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
-                >
-                  ✕
-                </button>
-              </div>
+            <div className="absolute top-16 right-4">
+              <div 
+                className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setShowWallets(false)
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
+                  >
+                    ✕
+                  </button>
+                </div>
 
-              <div className="space-y-3">
-                {/* Εδώ συνεχίζει ο υπόλοιπος κώδικας του modal */}
-                {walletOptions.map((walletOption) => (
-                  <div key={walletOption.id} className="relative">
-                    <div
-                      className={`w-full p-4 border rounded-xl transition-all duration-200 ${
-                        walletOption.available
-                          ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
-                          : 'border-gray-600/30 bg-gray-800/30 opacity-60'
-                      }`}
-                    >
+                <div className="space-y-3">
+                  {/* Εδώ συνεχίζει ο υπόλοιπος κώδικας του modal */}
+                  {walletOptions.map((walletOption) => (
+                    <div key={walletOption.id} className="relative">
                       <div
-                        className="flex items-center gap-3 cursor-pointer w-full"
-                        onClick={() => handleConnect(walletOption.id)}
+                        className={`w-full p-4 border rounded-xl transition-all duration-200 ${
+                          walletOption.available
+                            ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
+                            : 'border-gray-600/30 bg-gray-800/30 opacity-60'
+                        }`}
                       >
-                        <span className="text-2xl">{walletOption.icon}</span>
-                        <div className="flex-1">
-                          <div className="font-medium text-white flex items-center gap-2 flex-wrap">
-                            {walletOption.name}
-                            {walletOption.id === 'demo' && (
-                              <Badge variant="success" className="text-xs">
-                                Recommended
-                              </Badge>
-                            )}
-                            {!walletOption.available && walletOption.id !== 'demo' && (
-                              <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
-                                Try Connect
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-400 mt-1">
-                            {walletOption.description}
+                        <div
+                          className="flex items-center gap-3 cursor-pointer w-full"
+                          onClick={() => handleConnect(walletOption.id)}
+                        >
+                          <span className="text-2xl">{walletOption.icon}</span>
+                          <div className="flex-1">
+                            <div className="font-medium text-white flex items-center gap-2 flex-wrap">
+                              {walletOption.name}
+                              {walletOption.id === 'demo' && (
+                                <Badge variant="success" className="text-xs">
+                                  Recommended
+                                </Badge>
+                              )}
+                              {!walletOption.available && walletOption.id !== 'demo' && (
+                                <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
+                                  Try Connect
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-400 mt-1">
+                              {walletOption.description}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
