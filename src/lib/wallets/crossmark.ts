@@ -95,7 +95,16 @@ export class CrossmarkProvider implements WalletProvider {
         
         if (!address) {
           console.error('No address found in signInResult:', signInResult)
-          throw new Error('Failed to get wallet address from Crossmark. Please ensure you have selected an active account in Crossmark extension.')
+          
+          // Έλεγχος αν το wallet είναι ενεργοποιημένο
+          if (signInResult && signInResult.response && signInResult.response.account) {
+            const account = signInResult.response.account
+            if (account.balance && parseFloat(account.balance) < 2000000) { // 2 XRP σε drops
+              throw new Error('Your XRP wallet is not activated. You need at least 2 XRP to activate your wallet. Please add funds to your Crossmark wallet and try again.')
+            }
+          }
+          
+          throw new Error('Failed to get wallet address from Crossmark. Please ensure you have an active account in Crossmark extension and that your wallet is activated with at least 2 XRP.')
         }
 
         console.log('Successfully connected to Crossmark with address:', address)
@@ -117,7 +126,11 @@ export class CrossmarkProvider implements WalletProvider {
           throw new Error('Connection rejected by user. Please try again and approve the connection in Crossmark.')
         }
         
-        throw new Error(`Failed to get wallet information from Crossmark: ${sdkError.message || sdkError}`)
+        if (sdkError.message && sdkError.message.includes('not activated')) {
+          throw new Error('Your XRP wallet is not activated. You need at least 2 XRP to activate your wallet. Please add funds to your Crossmark wallet and try again.')
+        }
+        
+        throw new Error(`Failed to get wallet information from Crossmark: ${sdkError.message || sdkError}. Please ensure your wallet is activated with at least 2 XRP.`)
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -129,6 +142,7 @@ export class CrossmarkProvider implements WalletProvider {
 
   async disconnect(): Promise<void> {
     // Crossmark SDK doesn't have a disconnect method
+    console.log('Crossmark disconnected')
   }
 
   async signMessage(message: string): Promise<string> {
@@ -167,13 +181,22 @@ export class CrossmarkProvider implements WalletProvider {
 
       const signInResult = await sdk.methods.signInAndWait()
       
-      if (!signInResult.response?.address) {
+      let userAddress = null
+      if (signInResult && signInResult.response) {
+        userAddress = signInResult.response.address
+      } else if (signInResult && signInResult.data) {
+        userAddress = signInResult.data.address
+      } else if (signInResult && signInResult.address) {
+        userAddress = signInResult.address
+      }
+      
+      if (!userAddress) {
         throw new Error('Could not get user address')
       }
 
       const result = await sdk.methods.signAndSubmitAndWait({
         TransactionType: 'Payment',
-        Account: signInResult.response.address,
+        Account: userAddress,
         Destination: destination,
         Amount: amount,
         Fee: '12'
@@ -182,6 +205,48 @@ export class CrossmarkProvider implements WalletProvider {
       return result.response?.data?.resp?.result?.hash || result.response?.data?.resp?.hash || ''
     } catch (error) {
       throw new Error(`Failed to send payment: ${error}`)
+    }
+  }
+
+  async sendEmail(to: string, subject: string, body: string): Promise<string> {
+    // Προσομοίωση αποστολής email μέσω XRPL
+    try {
+      const emailData = {
+        to,
+        subject,
+        body,
+        timestamp: Date.now()
+      }
+      
+      // Εδώ θα μπορούσαμε να χρησιμοποιήσουμε το XRPL για αποθήκευση
+      const message = JSON.stringify(emailData)
+      const signature = await this.signMessage(message)
+      
+      console.log('Email sent via XRPL:', emailData)
+      return signature
+    } catch (error) {
+      throw new Error(`Failed to send email: ${error}`)
+    }
+  }
+
+  async getEmails(): Promise<any[]> {
+    // Προσομοίωση ανάκτησης emails από XRPL
+    try {
+      // Εδώ θα μπορούσαμε να ανακτήσουμε δεδομένα από το XRPL
+      const mockEmails = [
+        {
+          id: '1',
+          from: 'example@xrpl.email',
+          to: 'user@xrpl.email',
+          subject: 'Welcome to XRPL Email',
+          body: 'This is a test email sent via XRPL',
+          timestamp: Date.now() - 86400000 // 1 day ago
+        }
+      ]
+      
+      return mockEmails
+    } catch (error) {
+      throw new Error(`Failed to get emails: ${error}`)
     }
   }
 }
