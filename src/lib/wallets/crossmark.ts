@@ -24,51 +24,28 @@ export class CrossmarkProvider implements WalletProvider {
   name = 'Crossmark'
 
   isInstalled(): boolean {
-    try {
-      console.log('🔍 Checking Crossmark installation...')
-      console.log('window:', typeof window)
-      console.log('window.crossmark:', window.crossmark)
-      console.log('typeof window.crossmark:', typeof window.crossmark)
-      
-      if (typeof window === 'undefined') {
-        console.log('❌ Window is undefined')
-        return false
-      }
-      
-      if (typeof window.crossmark === 'undefined') {
-        console.log('❌ window.crossmark is undefined')
-        return false
-      }
-      
-      if (window.crossmark === null) {
-        console.log('❌ window.crossmark is null')
-        return false
-      }
-      
-      console.log('window.crossmark.isInstalled:', window.crossmark.isInstalled)
-      console.log('typeof window.crossmark.isInstalled:', typeof window.crossmark.isInstalled)
-      
-      if (typeof window.crossmark.isInstalled !== 'function') {
-        console.log('❌ window.crossmark.isInstalled is not a function')
-        return false
-      }
-      
-      const result = window.crossmark.isInstalled()
-      console.log('✅ Crossmark.isInstalled() result:', result)
-      return result
-    } catch (error) {
-      console.error('❌ Error checking Crossmark installation:', error)
-      return false
-    }
+    // Always return true and let the connect method handle the actual detection
+    return true
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
-    if (!this.isInstalled()) {
-      throw new Error('Crossmark is not installed')
+    // If custom address is provided, use it (for demo/testing)
+    if (customAddress) {
+      return {
+        name: this.name,
+        address: customAddress,
+        publicKey: 'demo-public-key',
+        networkId: 'mainnet'
+      }
     }
 
     try {
-      const result = await window.crossmark!.connect()
+      // Check if Crossmark is actually available
+      if (typeof window === 'undefined' || !window.crossmark) {
+        throw new Error('Crossmark extension not found. Please install Crossmark from crossmark.io and refresh the page.')
+      }
+
+      const result = await window.crossmark.connect()
 
       return {
         name: this.name,
@@ -77,6 +54,9 @@ export class CrossmarkProvider implements WalletProvider {
         networkId: result.network
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        throw error
+      }
       throw new Error(`Failed to connect to Crossmark: ${error}`)
     }
   }
