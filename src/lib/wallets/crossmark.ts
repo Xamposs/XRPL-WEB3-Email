@@ -24,7 +24,16 @@ export class CrossmarkProvider implements WalletProvider {
   name = 'Crossmark'
 
   isInstalled(): boolean {
-    return typeof window !== 'undefined' && !!window.crossmark?.isInstalled()
+    try {
+      return typeof window !== 'undefined' && 
+             typeof window.crossmark !== 'undefined' && 
+             window.crossmark !== null &&
+             typeof window.crossmark.isInstalled === 'function' &&
+             window.crossmark.isInstalled()
+    } catch (error) {
+      console.error('Error checking Crossmark installation:', error)
+      return false
+    }
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
