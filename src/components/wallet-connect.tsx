@@ -241,105 +241,72 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
         </div>
 
         {showWallets && (
-          <>
-            {/* Portal-style backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={() => setShowWallets(false)}
+          >
             <div 
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]" 
-              onClick={() => setShowWallets(false)}
-            />
-            {/* Dropdown positioned relative to button */}
-            <div className="absolute top-full left-0 mt-2 z-[10000] min-w-[320px]">
-              <div 
-                className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setShowWallets(false)
-                    }}
-                    className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
-                  >
-                    ✕
-                  </button>
-                </div>
+              className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowWallets(false)
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-800 rounded"
+                >
+                  ✕
+                </button>
+              </div>
 
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {walletOptions.map((walletOption) => (
-                    <div key={walletOption.id} className="relative">
+              <div className="space-y-3">
+                {/* Εδώ συνεχίζει ο υπόλοιπος κώδικας του modal */}
+                {walletOptions.map((walletOption) => (
+                  <div key={walletOption.id} className="relative">
+                    <div
+                      className={`w-full p-4 border rounded-xl transition-all duration-200 ${
+                        walletOption.available
+                          ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
+                          : 'border-gray-600/30 bg-gray-800/30 opacity-60'
+                      }`}
+                    >
                       <div
-                        className={`w-full p-4 border rounded-xl transition-all duration-200 ${
-                          walletOption.available
-                            ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
-                            : 'border-gray-600/30 bg-gray-800/30 opacity-60'
-                        }`}
+                        className="flex items-center gap-3 cursor-pointer w-full"
+                        onClick={() => handleConnect(walletOption.id)}
                       >
-                        <div
-                          className="flex items-center gap-3 cursor-pointer w-full"
-                          onClick={() => handleConnect(walletOption.id)}
-                        >
-                          <span className="text-2xl">{walletOption.icon}</span>
-                          <div className="flex-1">
-                            <div className="font-medium text-white flex items-center gap-2 flex-wrap">
-                              {walletOption.name}
-                              {walletOption.id === 'demo' && (
-                                <Badge variant="success" className="text-xs">
-                                  Recommended
-                                </Badge>
-                              )}
-                              {!walletOption.available && walletOption.id !== 'demo' && (
-                                <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
-                                  Try Connect
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-400 mt-1">
-                              {walletOption.description}
-                            </div>
+                        <span className="text-2xl">{walletOption.icon}</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-white flex items-center gap-2 flex-wrap">
+                            {walletOption.name}
+                            {walletOption.id === 'demo' && (
+                              <Badge variant="success" className="text-xs">
+                                Recommended
+                              </Badge>
+                            )}
+                            {!walletOption.available && walletOption.id !== 'demo' && (
+                              <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
+                                Try Connect
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-400 mt-1">
+                            {walletOption.description}
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 mt-6">
-                  <div className="text-xs text-blue-300 font-medium">Quick Demo Addresses:</div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <button
-                      onClick={() => handleQuickConnect('rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH')}
-                      className="text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-md transition-colors"
-                    >
-                      <div className="text-xs text-blue-300">📧 Sender</div>
-                      <div className="text-xs text-gray-300 font-mono">rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH</div>
-                    </button>
-                    <button
-                      onClick={() => handleQuickConnect('rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh')}
-                      className="text-left px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-md transition-colors"
-                    >
-                      <div className="text-xs text-purple-300">📨 Recipient</div>
-                      <div className="text-xs text-gray-300 font-mono">rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh</div>
-                    </button>
                   </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setShowWallets(false)}
-                    className="flex-1 px-4 py-2 border border-white/20 text-gray-300 hover:bg-white/10 rounded-md transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     )
