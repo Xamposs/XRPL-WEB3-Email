@@ -1,46 +1,5 @@
 import { WalletProvider, WalletInfo } from './types'
 
-// Type definitions για το Crossmark SDK
-interface CrossmarkSDK {
-  methods: {
-    signInAndWait: () => Promise<{
-      response: {
-        address: string
-        publicKey?: string
-        network?: string
-      }
-    }>
-    signAndWait: (payload: any) => Promise<{
-      response: {
-        signature?: string
-        data?: {
-          signature?: string
-        }
-      }
-    }>
-    signAndSubmitAndWait: (transaction: any) => Promise<{
-      response: {
-        data?: {
-          resp?: {
-            result?: {
-              hash?: string
-            }
-            hash?: string
-          }
-        }
-      }
-    }>
-  }
-}
-
-// Import του SDK με proper typing
-let sdk: CrossmarkSDK
-try {
-  sdk = require('@crossmarkio/sdk')
-} catch (error) {
-  console.warn('Crossmark SDK not available:', error)
-}
-
 declare global {
   interface Window {
     crossmark?: any
@@ -49,6 +8,29 @@ declare global {
 
 export class CrossmarkProvider implements WalletProvider {
   name = 'Crossmark'
+  private sdk: any = null
+
+  private async loadSDK() {
+    if (this.sdk) return this.sdk
+    
+    try {
+      // Δοκιμή dynamic import
+      const sdkModule = await import('@crossmarkio/sdk')
+      this.sdk = sdkModule.default || sdkModule
+      return this.sdk
+    } catch (error) {
+      console.warn('Failed to load Crossmark SDK via import:', error)
+      
+      // Fallback σε require
+      try {
+        this.sdk = require('@crossmarkio/sdk')
+        return this.sdk
+      } catch (requireError) {
+        console.warn('Failed to load Crossmark SDK via require:', requireError)
+        throw new Error('Crossmark SDK not available. Please ensure @crossmarkio/sdk is properly installed.')
+      }
+    }
+  }
 
   isInstalled(): boolean {
     try {
@@ -76,8 +58,10 @@ export class CrossmarkProvider implements WalletProvider {
         throw new Error('Crossmark extension not found. Please install Crossmark from crossmark.io and refresh the page.')
       }
 
-      if (!sdk) {
-        throw new Error('Crossmark SDK not available')
+      const sdk = await this.loadSDK()
+      
+      if (!sdk || !sdk.methods || !sdk.methods.signInAndWait) {
+        throw new Error('Crossmark SDK methods not available. Please check SDK installation.')
       }
 
       const signInResult = await sdk.methods.signInAndWait()
@@ -109,16 +93,18 @@ export class CrossmarkProvider implements WalletProvider {
       throw new Error('Crossmark is not installed')
     }
 
-    if (!sdk) {
-      throw new Error('Crossmark SDK not available')
-    }
-
     try {
+      const sdk = await this.loadSDK()
+      
+      if (!sdk || !sdk.methods || !sdk.methods.signAndWait) {
+        throw new Error('Crossmark SDK methods not available')
+      }
+
       const result = await sdk.methods.signAndWait({
         message: message
       })
       
-      return result.response.signature || result.response.data?.signature || ''
+      return result.response?.signature || result.response?.data?.signature || ''
     } catch (error) {
       throw new Error(`Failed to sign message: ${error}`)
     }
@@ -129,11 +115,13 @@ export class CrossmarkProvider implements WalletProvider {
       throw new Error('Crossmark is not installed')
     }
 
-    if (!sdk) {
-      throw new Error('Crossmark SDK not available')
-    }
-
     try {
+      const sdk = await this.loadSDK()
+      
+      if (!sdk || !sdk.methods) {
+        throw new Error('Crossmark SDK methods not available')
+      }
+
       const signInResult = await sdk.methods.signInAndWait()
       
       if (!signInResult.response?.address) {
@@ -148,7 +136,7 @@ export class CrossmarkProvider implements WalletProvider {
         Fee: '12'
       })
       
-      return result.response.data?.resp?.result?.hash || result.response.data?.resp?.hash || ''
+      return result.response?.data?.resp?.result?.hash || result.response?.data?.resp?.hash || ''
     } catch (error) {
       throw new Error(`Failed to send payment: ${error}`)
     }
