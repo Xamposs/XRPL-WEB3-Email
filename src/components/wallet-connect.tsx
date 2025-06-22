@@ -248,7 +248,6 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
             <div 
               className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => {
-                e.preventDefault()
                 e.stopPropagation()
               }}
             >
