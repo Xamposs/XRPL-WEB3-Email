@@ -96,29 +96,54 @@ export class XamanSDKProvider implements WalletProvider {
         TransactionType: 'SignIn'
       },
       options: {
-        signinFlow: true
+        submit: false,
+        multisign: false,
+        expire: 5
       }
     }
 
     console.log('🔗 Sending payload to Xaman API:', payloadData)
 
-    // For demo purposes, create a mock payload
-    // In production, you would call the real Xaman API
-    const mockPayload: XamanPayload = {
-      uuid: this.generateUUID(),
+    // ΠΡΑΓΜΑΤΙΚΗ κλήση στο Xaman API
+    try {
+      const response = await fetch(`${this.baseUrl}/payload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': this.apiKey,
+          'X-API-Secret': this.apiSecret
+        },
+        body: JSON.stringify(payloadData)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Xaman API error: ${response.status}`)
+      }
+
+      const payload = await response.json()
+      return payload
+    } catch (error) {
+      console.error('❌ Failed to create Xaman payload:', error)
+      // Fallback σε demo mode
+      return this.createMockPayload()
+    }
+  }
+
+  private createMockPayload(): XamanPayload {
+    const uuid = this.generateUUID()
+    return {
+      uuid,
       next: {
-        always: `https://xumm.app/sign/${this.generateUUID()}`
+        always: `https://xumm.app/sign/${uuid}`
       },
       refs: {
-        qr_png: `https://xumm.app/sign/${this.generateUUID()}_q.png`,
-        qr_matrix: `https://xumm.app/sign/${this.generateUUID()}_q.json`,
+        qr_png: `https://xumm.app/sign/${uuid}_q.png`,
+        qr_matrix: `https://xumm.app/sign/${uuid}_q.json`,
         qr_uri_quality_opts: ['m', 'q', 'h'],
-        websocket_status: `wss://xumm.app/sign/${this.generateUUID()}`
+        websocket_status: `wss://xumm.app/sign/${uuid}`
       },
       pushed: false
     }
-
-    return mockPayload
   }
 
   private showQRModal(payload: XamanPayload): void {
