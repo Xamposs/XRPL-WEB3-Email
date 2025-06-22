@@ -243,14 +243,18 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
         </div>
 
         {showWallets && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-            onClick={() => setShowWallets(false)}
-          >
+          <>
+            {/* Modal backdrop */}
             <div 
-              className="bg-gray-900 border border-white/20 rounded-2xl p-6 shadow-2xl min-w-[320px] max-w-md w-full max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]" 
+              onClick={() => setShowWallets(false)}
+            />
+            {/* Modal - Changed to dropdown positioning */}
+            <div className="absolute top-full right-0 mt-2 z-[10000]">
+              <div 
+                className="bg-gray-900 border border-white/20 rounded-2xl p-6 w-80 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-white">Connect Wallet</h3>
                   <button
@@ -261,7 +265,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {walletOptions.map((walletOption) => (
                     <div key={walletOption.id} className="relative">
                       <div
@@ -301,6 +305,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
                 </div>
               </div>
             </div>
+          </>
         )}
       </div>
     )
