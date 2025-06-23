@@ -127,7 +127,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
         return
       }
 
-      // ΑΦΑΙΡΕΣΕ ΑΥΤΕΣ ΤΙΣ ΓΡΑΜΜΕΣ:
+      // ΑΦΑΙΡΕΣΕ ΑΥΤΕΣ ΤΙΣ ΓΡΑΜΜΣ:
       // if (walletId === 'gemwallet') {
       //   alert(`GemWallet browser extension not found! Please install GemWallet from the Chrome Web Store, or try Demo Mode to test the platform.`)
       //   return
@@ -144,9 +144,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
       console.error('Failed to connect:', error)
 
       if (errorMessage.includes('not installed')) {
-        if (walletId === 'gemwallet') {
-          alert(`GemWallet browser extension not found! Please install GemWallet from the Chrome Web Store, or try Demo Mode to test the platform.`)
-        } else if (walletId === 'crossmark') {
+        if (walletId === 'crossmark') {
           alert(`Crossmark browser extension not found! Please install Crossmark from crossmark.io, or try Demo Mode to test the platform.`)
         } else {
           alert(`Wallet not found! Please install the wallet extension first, or try Demo Mode to test the platform.`)
