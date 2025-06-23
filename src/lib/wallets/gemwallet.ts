@@ -1,30 +1,12 @@
-import { WalletProvider, WalletInfo } from './types'
-
-declare global {
-  interface Window {
-    gemWallet?: {
-      isInstalled: () => boolean
-      getAddress: () => Promise<{ address: string }>
-      getPublicKey: () => Promise<{ publicKey: string }>
-      signMessage: (message: string) => Promise<{ signedMessage: string }>
-      sendPayment: (payment: {
-        destination: string
-        amount: string
-        destinationTag?: number
-      }) => Promise<{ hash: string }>
-      getNetwork: () => Promise<{ network: string }>
-    }
-  }
-}
+import { isInstalled, getAddress, getPublicKey, getNetwork, signMessage, sendPayment } from '@gemwallet/api'
+import type { WalletProvider, WalletInfo } from './types'
 
 export class GemWalletProvider implements WalletProvider {
   name = 'GemWallet'
 
   isInstalled(): boolean {
     try {
-      // Πιο απλός έλεγχος - μόνο αν υπάρχει το object
-      return typeof window !== 'undefined' && 
-             !!(window as any).gemWallet
+      return isInstalled()
     } catch (error) {
       console.log('GemWallet detection error:', error)
       return false
@@ -37,12 +19,10 @@ export class GemWalletProvider implements WalletProvider {
     }
 
     try {
-      const gemWallet = (window as any).gemWallet
-      
       const [addressResult, publicKeyResult, networkResult] = await Promise.all([
-        gemWallet.getAddress(),
-        gemWallet.getPublicKey(),
-        gemWallet.getNetwork()
+        getAddress(),
+        getPublicKey(),
+        getNetwork()
       ])
 
       return {
@@ -58,7 +38,6 @@ export class GemWalletProvider implements WalletProvider {
 
   async disconnect(): Promise<void> {
     // GemWallet doesn't have a disconnect method
-    // The connection state is managed by the extension
   }
 
   async signMessage(message: string): Promise<string> {
@@ -66,27 +45,20 @@ export class GemWalletProvider implements WalletProvider {
       throw new Error('GemWallet is not installed')
     }
 
-    try {
-      const result = await window.gemWallet!.signMessage(message)
-      return result.signedMessage
-    } catch (error) {
-      throw new Error(`Failed to sign message: ${error}`)
-    }
+    const result = await signMessage(message)
+    return result.signedMessage
   }
 
-  async sendPayment(destination: string, amount: string): Promise<string> {
+  async sendPayment(destination: string, amount: string, destinationTag?: number): Promise<string> {
     if (!this.isInstalled()) {
       throw new Error('GemWallet is not installed')
     }
 
-    try {
-      const result = await window.gemWallet!.sendPayment({
-        destination,
-        amount
-      })
-      return result.hash
-    } catch (error) {
-      throw new Error(`Failed to send payment: ${error}`)
-    }
+    const result = await sendPayment({
+      destination,
+      amount,
+      destinationTag
+    })
+    return result.hash
   }
 }

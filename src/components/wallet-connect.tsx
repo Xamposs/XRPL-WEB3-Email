@@ -8,6 +8,8 @@ import { Badge } from './ui/badge'
 import { useWallet } from '@/lib/wallets/wallet-context'
 import { formatAddress } from '@/lib/utils'
 
+import { isInstalled as isGemWalletInstalled } from '@gemwallet/api'
+
 const walletOptions = [
   {
     id: 'demo',
@@ -68,7 +70,7 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
     if (typeof window !== 'undefined') {
       walletOptions.forEach(wallet => {
         if (wallet.id === 'gemwallet') {
-          wallet.available = !!(window as any).gemWallet
+          wallet.available = isGemWalletInstalled()
         } else if (wallet.id === 'crossmark') {
           wallet.available = !!(window as any).crossmark
         } else if (wallet.id === 'xaman') {
