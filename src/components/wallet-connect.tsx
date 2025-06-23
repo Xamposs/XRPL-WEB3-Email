@@ -78,7 +78,9 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
       
       // Check GemWallet asynchronously
       import('@gemwallet/api').then(({ isInstalled }) => {
-        isInstalled().then(installed => {
+        isInstalled().then(response => {
+          // Το response είναι IsInstalledResponse object, όχι boolean
+          const installed = response?.result?.isInstalled || false
           setWalletAvailability(prev => ({ ...prev, gemwallet: installed }))
         }).catch(() => {
           setWalletAvailability(prev => ({ ...prev, gemwallet: false }))
