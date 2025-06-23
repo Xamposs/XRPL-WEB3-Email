@@ -127,6 +127,12 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
         return
       }
 
+      // ΑΦΑΙΡΕΣΕ ΑΥΤΕΣ ΤΙΣ ΓΡΑΜΜΕΣ:
+      // if (walletId === 'gemwallet') {
+      //   alert(`GemWallet browser extension not found! Please install GemWallet from the Chrome Web Store, or try Demo Mode to test the platform.`)
+      //   return
+      // }
+
       await connect(walletId, address)
       setShowWallets(false)
       setShowCustomInput(false)
