@@ -22,9 +22,9 @@ export class GemWalletProvider implements WalletProvider {
 
   isInstalled(): boolean {
     try {
+      // Πιο απλός έλεγχος - μόνο αν υπάρχει το object
       return typeof window !== 'undefined' && 
-             typeof window.gemWallet !== 'undefined' &&
-             window.gemWallet !== null
+             !!(window as any).gemWallet
     } catch (error) {
       console.log('GemWallet detection error:', error)
       return false
@@ -37,10 +37,12 @@ export class GemWalletProvider implements WalletProvider {
     }
 
     try {
+      const gemWallet = (window as any).gemWallet
+      
       const [addressResult, publicKeyResult, networkResult] = await Promise.all([
-        window.gemWallet!.getAddress(),
-        window.gemWallet!.getPublicKey(),
-        window.gemWallet!.getNetwork()
+        gemWallet.getAddress(),
+        gemWallet.getPublicKey(),
+        gemWallet.getNetwork()
       ])
 
       return {
