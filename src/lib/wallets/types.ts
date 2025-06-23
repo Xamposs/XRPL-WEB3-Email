@@ -11,7 +11,7 @@ export interface WalletProvider {
   connect: (customAddress?: string) => Promise<WalletInfo>
   disconnect: () => Promise<void>
   signMessage: (message: string) => Promise<string>
-  sendPayment: (destination: string, amount: string) => Promise<string>
+  sendPayment: (destination: string, amount: string, destinationTag?: number) => Promise<string>
 }
 
 export interface EmailMessage {

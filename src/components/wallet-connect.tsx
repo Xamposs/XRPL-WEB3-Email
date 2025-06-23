@@ -8,8 +8,6 @@ import { Badge } from './ui/badge'
 import { useWallet } from '@/lib/wallets/wallet-context'
 import { formatAddress } from '@/lib/utils'
 
-import { isInstalled as isGemWalletInstalled } from '@gemwallet/api'
-
 const walletOptions = [
   {
     id: 'demo',
@@ -63,22 +61,38 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [customAddress, setCustomAddress] = useState('')
   const [showXamanQR, setShowXamanQR] = useState(false)
+  const [walletAvailability, setWalletAvailability] = useState<Record<string, boolean>>({})
   const modalId = `wallet-modal-${id}`
 
   // Check if wallets are actually installed
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      walletOptions.forEach(wallet => {
-        if (wallet.id === 'gemwallet') {
-          wallet.available = isGemWalletInstalled()
-        } else if (wallet.id === 'crossmark') {
-          wallet.available = !!(window as any).crossmark
-        } else if (wallet.id === 'xaman') {
-          wallet.available = !!((window as any).xaman || (window as any).xumm)
-        }
-      })
+      const availability: Record<string, boolean> = {}
+      
+      // Check GemWallet
+      try {
+        availability.gemwallet = !!(window as any).gemWallet
+      } catch (error) {
+        availability.gemwallet = false
+      }
+      
+      // Check Crossmark
+      availability.crossmark = !!(window as any).crossmark
+      
+      // Check Xaman
+      availability.xaman = !!((window as any).xaman || (window as any).xumm)
+      
+      setWalletAvailability(availability)
     }
   }, [])
+
+  // Get wallet availability
+  const getWalletAvailability = (walletId: string) => {
+    if (walletId === 'demo' || walletId === 'demo-custom') {
+      return true
+    }
+    return walletAvailability[walletId] || false
+  }
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -128,12 +142,6 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
         }
         return
       }
-
-      // ΑΦΑΙΡΕΣΕ ΑΥΤΕΣ ΤΙΣ ΓΡΑΜΜΣ:
-      // if (walletId === 'gemwallet') {
-      //   alert(`GemWallet browser extension not found! Please install GemWallet from the Chrome Web Store, or try Demo Mode to test the platform.`)
-      //   return
-      // }
 
       await connect(walletId, address)
       setShowWallets(false)
@@ -363,42 +371,45 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
               </div>
 
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {walletOptions.map((walletOption) => (
-                  <div key={walletOption.id} className="relative">
-                    <div
-                      className={`w-full p-4 border rounded-xl transition-all duration-200 ${
-                        walletOption.available
-                          ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
-                          : 'border-gray-600/30 bg-gray-800/30 opacity-60'
-                      }`}
-                    >
+                {walletOptions.map((walletOption) => {
+                  const isAvailable = getWalletAvailability(walletOption.id)
+                  return (
+                    <div key={walletOption.id} className="relative">
                       <div
-                        className="flex items-center gap-3 cursor-pointer w-full"
-                        onClick={() => handleConnect(walletOption.id)}
+                        className={`w-full p-4 border rounded-xl transition-all duration-200 ${
+                          isAvailable
+                            ? 'border-white/20 hover:border-blue-400/50 hover:bg-white/5'
+                            : 'border-gray-600/30 bg-gray-800/30 opacity-60'
+                        }`}
                       >
-                        <span className="text-2xl">{walletOption.icon}</span>
-                        <div className="flex-1">
-                          <div className="font-medium text-white flex items-center gap-2 flex-wrap">
-                            {walletOption.name}
-                            {walletOption.id === 'demo' && (
-                              <Badge variant="success" className="text-xs">
-                                Recommended
-                              </Badge>
-                            )}
-                            {!walletOption.available && walletOption.id !== 'demo' && (
-                              <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
-                                Try Connect
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-400 mt-1">
-                            {walletOption.description}
+                        <div
+                          className="flex items-center gap-3 cursor-pointer w-full"
+                          onClick={() => handleConnect(walletOption.id)}
+                        >
+                          <span className="text-2xl">{walletOption.icon}</span>
+                          <div className="flex-1">
+                            <div className="font-medium text-white flex items-center gap-2 flex-wrap">
+                              {walletOption.name}
+                              {walletOption.id === 'demo' && (
+                                <Badge variant="success" className="text-xs">
+                                  Recommended
+                                </Badge>
+                              )}
+                              {!isAvailable && walletOption.id !== 'demo' && (
+                                <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-400">
+                                  Try Connect
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-400 mt-1">
+                              {walletOption.description}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               <div className="space-y-2 mt-6">
