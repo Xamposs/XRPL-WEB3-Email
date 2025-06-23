@@ -67,22 +67,25 @@ export function WalletConnect({ id = 'default' }: WalletConnectProps = {}) {
   // Check if wallets are actually installed
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const availability: Record<string, boolean> = {}
-      
-      // Check GemWallet
-      try {
-        availability.gemwallet = !!(window as any).gemWallet
-      } catch (error) {
-        availability.gemwallet = false
+      // Initialize with synchronous checks first
+      const initialAvailability: Record<string, boolean> = {
+        crossmark: !!(window as any).crossmark,
+        xaman: !!((window as any).xaman || (window as any).xumm),
+        gemwallet: false // Will be updated asynchronously
       }
       
-      // Check Crossmark
-      availability.crossmark = !!(window as any).crossmark
+      setWalletAvailability(initialAvailability)
       
-      // Check Xaman
-      availability.xaman = !!((window as any).xaman || (window as any).xumm)
-      
-      setWalletAvailability(availability)
+      // Check GemWallet asynchronously
+      import('@gemwallet/api').then(({ isInstalled }) => {
+        isInstalled().then(installed => {
+          setWalletAvailability(prev => ({ ...prev, gemwallet: installed }))
+        }).catch(() => {
+          setWalletAvailability(prev => ({ ...prev, gemwallet: false }))
+        })
+      }).catch(() => {
+        setWalletAvailability(prev => ({ ...prev, gemwallet: false }))
+      })
     }
   }, [])
 

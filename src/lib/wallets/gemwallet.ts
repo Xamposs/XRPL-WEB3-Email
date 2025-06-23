@@ -1,4 +1,3 @@
-import type { WalletProvider, WalletInfo } from './types'
 import { 
   isInstalled, 
   getAddress, 
@@ -7,6 +6,7 @@ import {
   signMessage, 
   sendPayment 
 } from '@gemwallet/api'
+import { WalletProvider, WalletInfo } from './types'
 
 export class GemWalletProvider implements WalletProvider {
   name = 'GemWallet'
@@ -22,11 +22,13 @@ export class GemWalletProvider implements WalletProvider {
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
-    if (!this.isInstalled()) {
-      throw new Error('GemWallet is not installed')
-    }
-
     try {
+      // Χρησιμοποιούμε το async isInstalled για πιο ακριβή έλεγχο
+      const installed = await isInstalled()
+      if (!installed) {
+        throw new Error('GemWallet is not installed')
+      }
+
       const [addressResult, publicKeyResult, networkResult] = await Promise.all([
         getAddress(),
         getPublicKey(),
@@ -49,24 +51,51 @@ export class GemWalletProvider implements WalletProvider {
   }
 
   async signMessage(message: string): Promise<string> {
-    if (!this.isInstalled()) {
-      throw new Error('GemWallet is not installed')
+    try {
+      const installed = await isInstalled()
+      if (!installed) {
+        throw new Error('GemWallet is not installed')
+      }
+      // Διόρθωση: η signMessage δέχεται απλά το string, όχι object
+      const result = await signMessage(message)
+      return (result as any)?.signature || (result as any)?.result?.signature || ''
+    } catch (error) {
+      throw new Error(`Failed to sign message: ${error}`)
     }
-
-    const result = await signMessage(message)
-    return (result as any)?.signedMessage || (result as any)?.result?.signedMessage || ''
   }
 
   async sendPayment(destination: string, amount: string, destinationTag?: number): Promise<string> {
-    if (!this.isInstalled()) {
-      throw new Error('GemWallet is not installed')
+    try {
+      const installed = await isInstalled()
+      if (!installed) {
+        throw new Error('GemWallet is not installed')
+      }
+      const payment = {
+        destination,
+        amount: {
+          currency: 'XRP',
+          value: amount
+        },
+        ...(destinationTag && { destinationTag })
+      }
+      const result = await sendPayment(payment)
+      
+      // Handle different possible response formats
+      if (typeof result === 'string') {
+        return result
+      }
+      
+      if (result && typeof result === 'object') {
+        return (result as any)?.hash || 
+               (result as any)?.result?.hash || 
+               (result as any)?.txHash || 
+               (result as any)?.transactionHash || 
+               ''
+      }
+      
+      return ''
+    } catch (error) {
+      throw new Error(`Failed to send payment: ${error}`)
     }
-
-    const result = await sendPayment({
-      destination,
-      amount,
-      destinationTag
-    })
-    return (result as any)?.hash || (result as any)?.result?.hash || ''
   }
 }
