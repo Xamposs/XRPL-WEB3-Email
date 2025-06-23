@@ -21,7 +21,14 @@ export class GemWalletProvider implements WalletProvider {
   name = 'GemWallet'
 
   isInstalled(): boolean {
-    return typeof window !== 'undefined' && !!window.gemWallet?.isInstalled()
+    try {
+      return typeof window !== 'undefined' && 
+             typeof window.gemWallet !== 'undefined' &&
+             window.gemWallet !== null
+    } catch (error) {
+      console.log('GemWallet detection error:', error)
+      return false
+    }
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
