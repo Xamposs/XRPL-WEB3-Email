@@ -72,10 +72,7 @@ export class GemWalletProvider implements WalletProvider {
       }
       const payment = {
         destination,
-        amount: {
-          currency: 'XRP',
-          value: amount
-        },
+        amount: amount, // Για XRP, το amount είναι απλώς string (drops)
         ...(destinationTag && { destinationTag })
       }
       const result = await sendPayment(payment)
