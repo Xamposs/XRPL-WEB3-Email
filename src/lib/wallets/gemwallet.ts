@@ -12,34 +12,17 @@ export class GemWalletProvider implements WalletProvider {
   name = 'GemWallet'
 
   isInstalled(): boolean {
-    try {
-      if (typeof window === 'undefined') return false;
-      
-      // Έλεγχος για το window.gemWallet
-      if (typeof (window as any).gemWallet !== 'undefined') {
-        console.log('✅ GemWallet detected via window.gemWallet');
-        return true;
-      }
-      
-      // Έλεγχος για το window.GemWallet (με κεφαλαίο G)
-      if (typeof (window as any).GemWallet !== 'undefined') {
-        console.log('✅ GemWallet detected via window.GemWallet');
-        return true;
-      }
-      
-      console.log('❌ GemWallet not detected via synchronous checks');
-      return false;
-    } catch (error) {
-      console.error('❌ GemWallet detection error:', error);
-      return false;
-    }
+    // Για το GemWallet, επιστρέφουμε πάντα true και κάνουμε τον πραγματικό έλεγχο στο connect()
+    // Αυτό είναι επειδή το GemWallet δεν εκθέτει synchronous detection API
+    console.log('🔍 GemWallet detection: assuming available, will check in connect()');
+    return true;
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
     try {
       console.log('🔗 Attempting to connect to GemWallet...');
       
-      // Πρώτα ελέγχουμε αν το extension είναι εγκατεστημένο
+      // Κάνουμε τον πραγματικό έλεγχο εδώ
       const installed = await isInstalled();
       console.log('🔍 GemWallet isInstalled() result:', installed);
       
@@ -49,7 +32,9 @@ export class GemWalletProvider implements WalletProvider {
         isGemWalletInstalled = installed;
       } else if (installed && typeof installed === 'object') {
         // Αν το response είναι object, ψάχνουμε για το result
-        isGemWalletInstalled = (installed as any)?.result?.isInstalled || false;
+        isGemWalletInstalled = (installed as any)?.result?.isInstalled || 
+                               (installed as any)?.isInstalled || 
+                               false;
       }
       
       console.log('🔍 Final installation check:', isGemWalletInstalled);
