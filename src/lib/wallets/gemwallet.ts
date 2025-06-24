@@ -13,118 +13,174 @@ export class GemWalletProvider implements WalletProvider {
 
   isInstalled(): boolean {
     try {
-      // Δοκιμάζουμε διαφορετικούς τρόπους ελέγχου
       if (typeof window === 'undefined') return false;
       
       // Έλεγχος για το window.gemWallet
       if (typeof (window as any).gemWallet !== 'undefined') {
-        console.log('GemWallet detected via window.gemWallet');
+        console.log('✅ GemWallet detected via window.gemWallet');
         return true;
       }
       
       // Έλεγχος για το window.GemWallet (με κεφαλαίο G)
       if (typeof (window as any).GemWallet !== 'undefined') {
-        console.log('GemWallet detected via window.GemWallet');
+        console.log('✅ GemWallet detected via window.GemWallet');
         return true;
       }
       
-      // Έλεγχος για το chrome extension
-      if ((window as any).chrome?.runtime?.id) {
-        // Προσθέτουμε περισσότερα logs για debugging
-        console.log('Chrome extension detected, checking if it might be GemWallet');
-      }
-      
-      console.log('GemWallet not detected via synchronous checks');
+      console.log('❌ GemWallet not detected via synchronous checks');
       return false;
     } catch (error) {
-      console.error('GemWallet detection error:', error);
+      console.error('❌ GemWallet detection error:', error);
       return false;
     }
   }
 
   async connect(customAddress?: string): Promise<WalletInfo> {
     try {
-      // Προσθέτουμε περισσότερα logs για debugging
-      console.log('Attempting to connect to GemWallet...');
+      console.log('🔗 Attempting to connect to GemWallet...');
       
-      // Χρησιμοποιούμε το async isInstalled για πιο ακριβή έλεγχο
+      // Πρώτα ελέγχουμε αν το extension είναι εγκατεστημένο
       const installed = await isInstalled();
-      console.log('GemWallet isInstalled() result:', installed);
+      console.log('🔍 GemWallet isInstalled() result:', installed);
       
-      if (!installed) {
-        console.error('GemWallet is not installed according to API check');
-        throw new Error('GemWallet is not installed');
+      // Ελέγχουμε τη δομή του response
+      let isGemWalletInstalled = false;
+      if (typeof installed === 'boolean') {
+        isGemWalletInstalled = installed;
+      } else if (installed && typeof installed === 'object') {
+        // Αν το response είναι object, ψάχνουμε για το result
+        isGemWalletInstalled = (installed as any)?.result?.isInstalled || false;
+      }
+      
+      console.log('🔍 Final installation check:', isGemWalletInstalled);
+      
+      if (!isGemWalletInstalled) {
+        console.error('❌ GemWallet is not installed according to API check');
+        throw new Error('GemWallet is not installed. Please install the GemWallet browser extension from https://gemwallet.app/');
       }
 
-      console.log('Getting GemWallet account info...');
-      const [addressResult, publicKeyResult, networkResult] = await Promise.all([
-        getAddress(),
-        getPublicKey(),
-        getNetwork()
-      ]);
+      console.log('📡 Getting GemWallet account info...');
       
-      console.log('GemWallet address result:', addressResult);
-      console.log('GemWallet network result:', networkResult);
+      // Κάνουμε τις κλήσεις μία-μία για καλύτερο debugging
+      const addressResult = await getAddress();
+      console.log('📍 GemWallet address result:', addressResult);
+      
+      const publicKeyResult = await getPublicKey();
+      console.log('🔑 GemWallet publicKey result:', publicKeyResult);
+      
+      const networkResult = await getNetwork();
+      console.log('🌐 GemWallet network result:', networkResult);
+
+      // Εξάγουμε τα δεδομένα με διαφορετικούς τρόπους
+      const address = this.extractValue(addressResult, 'address');
+      const publicKey = this.extractValue(publicKeyResult, 'publicKey');
+      const networkId = this.extractValue(networkResult, 'network') || 'mainnet';
+
+      if (!address) {
+        throw new Error('Failed to get address from GemWallet');
+      }
+
+      console.log('✅ GemWallet connection successful:', { address, networkId });
 
       return {
         name: this.name,
-        address: (addressResult as any)?.address || (addressResult as any)?.result?.address || '',
-        publicKey: (publicKeyResult as any)?.publicKey || (publicKeyResult as any)?.result?.publicKey || '',
-        networkId: (networkResult as any)?.network || (networkResult as any)?.result?.network || 'mainnet'
+        address,
+        publicKey,
+        networkId
       };
     } catch (error) {
-      console.error('Failed to connect to GemWallet:', error);
-      throw new Error(`Failed to connect to GemWallet: ${error}`);
+      console.error('❌ Failed to connect to GemWallet:', error);
+      
+      // Δίνουμε πιο συγκεκριμένα μηνύματα σφάλματος
+      if (error instanceof Error) {
+        if (error.message.includes('not installed')) {
+          throw new Error('GemWallet is not installed. Please install the GemWallet browser extension from https://gemwallet.app/');
+        } else if (error.message.includes('User rejected')) {
+          throw new Error('Connection was rejected by user');
+        } else {
+          throw new Error(`GemWallet connection failed: ${error.message}`);
+        }
+      }
+      
+      throw new Error(`Failed to connect to GemWallet: ${String(error)}`);
     }
   }
 
+  // Helper method για εξαγωγή τιμών από διαφορετικές δομές response
+  private extractValue(result: any, key: string): string {
+    if (!result) return '';
+    
+    // Άμεση τιμή
+    if (result[key]) return result[key];
+    
+    // Μέσα σε result object
+    if (result.result && result.result[key]) return result.result[key];
+    
+    // Μέσα σε data object
+    if (result.data && result.data[key]) return result.data[key];
+    
+    return '';
+  }
+
   async disconnect(): Promise<void> {
-    // GemWallet doesn't have a disconnect method
+    console.log('🔗 GemWallet disconnected');
   }
 
   async signMessage(message: string): Promise<string> {
     try {
-      const installed = await isInstalled()
+      console.log('✍️ Signing message with GemWallet...');
+      
+      const installed = await isInstalled();
       if (!installed) {
-        throw new Error('GemWallet is not installed')
+        throw new Error('GemWallet is not installed');
       }
-      // Διόρθωση: η signMessage δέχεται απλά το string, όχι object
-      const result = await signMessage(message)
-      return (result as any)?.signature || (result as any)?.result?.signature || ''
+      
+      const result = await signMessage(message);
+      console.log('✅ Message signed:', result);
+      
+      return this.extractValue(result, 'signature');
     } catch (error) {
-      throw new Error(`Failed to sign message: ${error}`)
+      console.error('❌ Failed to sign message:', error);
+      throw new Error(`Failed to sign message: ${error}`);
     }
   }
 
   async sendPayment(destination: string, amount: string, destinationTag?: number): Promise<string> {
     try {
-      const installed = await isInstalled()
+      console.log('💸 Sending payment with GemWallet...');
+      
+      const installed = await isInstalled();
       if (!installed) {
-        throw new Error('GemWallet is not installed')
+        throw new Error('GemWallet is not installed');
       }
+      
       const payment = {
         destination,
-        amount: amount, // Για XRP, το amount είναι απλώς string (drops)
+        amount: amount,
         ...(destinationTag && { destinationTag })
-      }
-      const result = await sendPayment(payment)
+      };
+      
+      console.log('💸 Payment details:', payment);
+      
+      const result = await sendPayment(payment);
+      console.log('✅ Payment sent:', result);
       
       // Handle different possible response formats
       if (typeof result === 'string') {
-        return result
+        return result;
       }
       
       if (result && typeof result === 'object') {
-        return (result as any)?.hash || 
-               (result as any)?.result?.hash || 
-               (result as any)?.txHash || 
-               (result as any)?.transactionHash || 
-               ''
+        return this.extractValue(result, 'hash') || 
+               this.extractValue(result, 'txHash') || 
+               this.extractValue(result, 'transactionHash') || 
+               '';
       }
       
-      return ''
+      return '';
     } catch (error) {
-      throw new Error(`Failed to send payment: ${error}`)
+      console.error('❌ Failed to send payment:', error);
+      throw new Error(`Failed to send payment: ${error}`);
     }
   }
 }
