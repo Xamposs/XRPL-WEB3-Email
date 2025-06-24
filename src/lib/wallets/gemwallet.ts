@@ -25,16 +25,30 @@ export class GemWalletProvider implements WalletProvider {
       // Κάνουμε τον πραγματικό έλεγχο εδώ
       const installed = await isInstalled();
       console.log('🔍 GemWallet isInstalled() result:', installed);
+      console.log('🔍 Type of result:', typeof installed);
+      console.log('🔍 Result structure:', JSON.stringify(installed, null, 2));
       
-      // Ελέγχουμε τη δομή του response
+      // Βελτιωμένη λογική εξαγωγής της τιμής isInstalled
       let isGemWalletInstalled = false;
+      
       if (typeof installed === 'boolean') {
         isGemWalletInstalled = installed;
       } else if (installed && typeof installed === 'object') {
-        // Αν το response είναι object, ψάχνουμε για το result
-        isGemWalletInstalled = (installed as any)?.result?.isInstalled || 
-                               (installed as any)?.isInstalled || 
-                               false;
+        // Ελέγχουμε όλες τις πιθανές δομές
+        const result = (installed as any);
+        
+        // Πρώτα ελέγχουμε αν υπάρχει result.result.isInstalled
+        if (result.result && typeof result.result === 'object') {
+          isGemWalletInstalled = result.result.isInstalled === true;
+        }
+        // Μετά ελέγχουμε αν υπάρχει result.isInstalled
+        else if (result.isInstalled !== undefined) {
+          isGemWalletInstalled = result.isInstalled === true;
+        }
+        // Τέλος ελέγχουμε αν το ίδιο το result είναι boolean
+        else if (result.result === true || result.result === false) {
+          isGemWalletInstalled = result.result === true;
+        }
       }
       
       console.log('🔍 Final installation check:', isGemWalletInstalled);
