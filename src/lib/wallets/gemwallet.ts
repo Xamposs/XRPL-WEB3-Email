@@ -44,26 +44,37 @@ export class GemWalletProvider implements WalletProvider {
 
   async connect(customAddress?: string): Promise<WalletInfo> {
     try {
+      // Προσθέτουμε περισσότερα logs για debugging
+      console.log('Attempting to connect to GemWallet...');
+      
       // Χρησιμοποιούμε το async isInstalled για πιο ακριβή έλεγχο
-      const installed = await isInstalled()
+      const installed = await isInstalled();
+      console.log('GemWallet isInstalled() result:', installed);
+      
       if (!installed) {
-        throw new Error('GemWallet is not installed')
+        console.error('GemWallet is not installed according to API check');
+        throw new Error('GemWallet is not installed');
       }
 
+      console.log('Getting GemWallet account info...');
       const [addressResult, publicKeyResult, networkResult] = await Promise.all([
         getAddress(),
         getPublicKey(),
         getNetwork()
-      ])
+      ]);
+      
+      console.log('GemWallet address result:', addressResult);
+      console.log('GemWallet network result:', networkResult);
 
       return {
         name: this.name,
         address: (addressResult as any)?.address || (addressResult as any)?.result?.address || '',
         publicKey: (publicKeyResult as any)?.publicKey || (publicKeyResult as any)?.result?.publicKey || '',
         networkId: (networkResult as any)?.network || (networkResult as any)?.result?.network || 'mainnet'
-      }
+      };
     } catch (error) {
-      throw new Error(`Failed to connect to GemWallet: ${error}`)
+      console.error('Failed to connect to GemWallet:', error);
+      throw new Error(`Failed to connect to GemWallet: ${error}`);
     }
   }
 
