@@ -13,11 +13,32 @@ export class GemWalletProvider implements WalletProvider {
 
   isInstalled(): boolean {
     try {
-      // Χρησιμοποιούμε synchronous έλεγχο για το window object
-      return typeof window !== 'undefined' && !!(window as any).gemWallet
+      // Δοκιμάζουμε διαφορετικούς τρόπους ελέγχου
+      if (typeof window === 'undefined') return false;
+      
+      // Έλεγχος για το window.gemWallet
+      if (typeof (window as any).gemWallet !== 'undefined') {
+        console.log('GemWallet detected via window.gemWallet');
+        return true;
+      }
+      
+      // Έλεγχος για το window.GemWallet (με κεφαλαίο G)
+      if (typeof (window as any).GemWallet !== 'undefined') {
+        console.log('GemWallet detected via window.GemWallet');
+        return true;
+      }
+      
+      // Έλεγχος για το chrome extension
+      if ((window as any).chrome?.runtime?.id) {
+        // Προσθέτουμε περισσότερα logs για debugging
+        console.log('Chrome extension detected, checking if it might be GemWallet');
+      }
+      
+      console.log('GemWallet not detected via synchronous checks');
+      return false;
     } catch (error) {
-      console.log('GemWallet detection error:', error)
-      return false
+      console.error('GemWallet detection error:', error);
+      return false;
     }
   }
 
